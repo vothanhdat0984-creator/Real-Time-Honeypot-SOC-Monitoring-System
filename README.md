@@ -29,33 +29,43 @@
 
 ## Kiến trúc hệ thống
 
-Luồng thu thập và xử lý dữ liệu:
+### Luồng thu thập và phân tích sự kiện
 
-```text
-Internet / SSH clients
-         |
-         v
-   Cowrie Honeypot
-         |
-         v
-   Cowrie JSON logs
-         |
-         v
-   Python Collector
-         |
-         v
-      PostgreSQL
-         |
-         v
-    FastAPI (SOC)
-         |
-         v
- React SOC Dashboard
+```mermaid
+flowchart TB
+    A(["Internet / SSH clients"])
+    B["Cowrie Honeypot"]
+    C["Python Collector"]
+    D[("PostgreSQL")]
+    E["FastAPI / Analytics / GeoIP"]
+    F["React SOC Dashboard"]
+
+    A -->|SSH| B
+    B -->|JSON logs| C
+    C -->|Sự kiện và cảnh báo| D
+    D -->|Truy vấn| E
+    E -->|API| F
 ```
 
-Luồng truy cập giao diện: **Trình duyệt → Cloudflare Access → Cloudflare Tunnel → Nginx → Dashboard / FastAPI**.
+### Luồng truy cập Dashboard
 
-Các dịch vụ FastAPI và PostgreSQL được giới hạn truy cập nội bộ trên VPS; SSH quản trị được tách khỏi cổng SSH giả lập của Cowrie.
+```mermaid
+flowchart TB
+    U(["Người xem"])
+    A["Cloudflare Access"]
+    T["Cloudflare Tunnel"]
+    N["Nginx"]
+    UI["React Dashboard"]
+    API["FastAPI"]
+
+    U --> A
+    A --> T
+    T --> N
+    N -->|Giao diện| UI
+    N -->|Định tuyến /api| API
+```
+
+**Bảo mật:** Cloudflare Access kiểm soát người được xem Dashboard. FastAPI và PostgreSQL chỉ phục vụ nội bộ trên VPS; SSH quản trị thật được tách khỏi SSH giả lập của Cowrie.
 
 ## Cấu trúc mã nguồn
 
